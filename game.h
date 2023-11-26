@@ -14,6 +14,8 @@ typedef struct game {
 
 int new_game(game*, SDL_Renderer*, int*, size_t, int h, int w);
 
-void invert(game* gm, int x, int y);
+void set(game* gm, int x, int y, char value);
+
+void clear(game* gm);
 
 int next_iteration(game*);

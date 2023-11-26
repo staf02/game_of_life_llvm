@@ -1,11 +1,9 @@
 #include "game.h"
 #include "sim.h"
 
-#include <stddef.h>
 #include <stdio.h>
-#include <malloc.h>
 
-int new_game(game* g, SDL_Renderer* context, int* pos, size_t pos_size, int w, int h) {
+int new_game(game* g, SDL_Renderer* context, const int* pos, const size_t pos_size, const int w, const int h) {
     g->ctx = context;
     g->width = w;
     g->height = h;
@@ -22,10 +20,19 @@ int new_game(game* g, SDL_Renderer* context, int* pos, size_t pos_size, int w, i
     return 1;
 }
 
-void invert(game* gm, int x, int y) {
+void set(game* gm, int x, int y, char value) {
     if (x >= 0 && y >= 0 && x < gm->width && y < gm->height) {
-        gm->map[x][y] = !gm->map[x][y];
+        gm->map[x][y] = value;
         simSetPixel(x, y, gm->map[x][y], gm->ctx);
+    }
+}
+
+void clear(game* gm) {
+    for (size_t x = 0; x < gm->width; x++) {
+        for (size_t y = 0; y < gm->height; y++) {
+            gm->map[x][y] = 0;
+            simSetPixel(x, y, gm->map[x][y], gm->ctx);
+        }
     }
 }
 
@@ -37,8 +44,8 @@ int next_iteration(game* g) {
             int alive = 0;
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
-                    size_t nx = x + dx, ny = y + dy;
-                    if (nx < g->width && ny < g->height && (nx != x || ny != y)) {
+                    const size_t nx = (SIM_X_SIZE + x + dx) % SIM_X_SIZE, ny = (y + SIM_Y_SIZE + dy) % SIM_Y_SIZE;
+                    if (nx != x || ny != y) {
                         if (g->map[nx][ny] == 1) {
                             alive++;
                         }

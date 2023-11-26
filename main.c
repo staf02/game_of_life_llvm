@@ -4,8 +4,11 @@
 #include "sim.h"
 
 #include <SDL.h>
-#include <stdio.h>
 #include <Windows.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -29,23 +32,22 @@ void close(SDL_Window* window, game* gm, SDL_Thread* worker, int* stop_flag) {
 }
 
 int render(void* data) {
-    render_data* r_data = (render_data*)(data);
-    SDL_Renderer* renderer = r_data->renderer;
-    game* gm = r_data->gm;
-    int* stop_flag = r_data->stop_flag;
-    int* paused = r_data->paused;
+    SDL_Renderer* renderer = ((render_data*)data)->renderer;
+    game* gm = ((render_data*)data)->gm;
+    const int* stop_flag = ((render_data*)data)->stop_flag;
+    const int* paused = ((render_data*)data)->paused;
     while (!(*stop_flag)) {
         if (!(*paused)) {
             simFlush(renderer);
             next_iteration(gm);
             SDL_RenderPresent(renderer);
         }
-        Sleep(500);
+        Sleep(50);
     }
     return 0;
 }
 
-int read_positon(char* file, int* position) {
+static int read_positon(const char* file, int* position) {
     FILE* f = fopen(file, "r");
     if (!f) {
         return 0;
@@ -61,6 +63,8 @@ int read_positon(char* file, int* position) {
 }
 
 int main(int argc, char* argv[]) {
+    srand(time(0));
+
     SDL_Window* window = NULL;
     SDL_Renderer* renderer;
 
@@ -87,7 +91,6 @@ int main(int argc, char* argv[]) {
             int stop_flag = 0;
             int paused = 0;
 
-            int height = 30, width = 40;
             int pos[SIM_X_SIZE * SIM_Y_SIZE * 2];
             int size = 0;
 
@@ -109,28 +112,35 @@ int main(int argc, char* argv[]) {
 
             SDL_Event e;
 
+            BOOL mouse_flag = 0;
+
             while (1) {
                 while (SDL_PollEvent(&e)) {
                     if (e.type == SDL_QUIT) {
                         close(window, &gm, worker, &stop_flag);
                         return 0;
                     }
-                    else if (e.type == SDL_KEYDOWN) {
+                    if (e.type == SDL_KEYDOWN) {
                         if (e.key.keysym.sym == SDLK_SPACE) {
                             paused = !paused;
                         }
-                    }
-                    else if (e.type == SDL_MOUSEBUTTONDOWN && paused) {
+                    } else if ((e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEMOTION && mouse_flag) && paused) {
+                        mouse_flag = TRUE;
                         int x, y;
-                        SDL_GetMouseState(&x, &y);
+                        const uint32_t res = SDL_GetMouseState(&x, &y);
                         x /= 20;
                         y /= 20;
-                        invert(&gm, x, y);
+                        if (res == 2) {
+                            clear(&gm);
+                        } else {
+                            set(&gm, x, y, (char)res & 1);
+}
                         SDL_RenderPresent(renderer);
-                    }
+                    } else if (e.type == SDL_MOUSEBUTTONUP) {
+                        mouse_flag = FALSE;
+                    } 
                 }
             }
         }
     }
-    return 0;
 }
