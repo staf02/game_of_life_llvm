@@ -1,21 +1,13 @@
 #pragma once
 
 #include <stddef.h>
-#include <SDL.h>
 
-typedef struct game {
-    char map[100][100];
-    int height;
-    int width;
+void new_game(const int* pos, const size_t pos_size, const int w, const int h);
 
-    SDL_Renderer* ctx;
+void set(int x, int y, char value);
 
-} game;
+void clear();
 
-int new_game(game*, SDL_Renderer*, int*, size_t, int h, int w);
+int next_iteration();
 
-void set(game* gm, int x, int y, char value);
-
-void clear(game* gm);
-
-int next_iteration(game*);
+void stop();
