@@ -1,13 +1,11 @@
 #include "game.h"
 #include "sim.h"
 
-#include <stdbool.h>
-
 char map[100][100];
 int height;
 int width;
 
-bool stop_flag = false;
+static int stop_flag = 0;
 
 void new_game(const int* pos, const size_t pos_size, const int w, const int h) {
     width = w;
@@ -78,7 +76,7 @@ int next_iteration() {
 }
 
 void stop() {
-    stop_flag = true;
+    stop_flag = 1;
 }
 
 int app(void* data) {

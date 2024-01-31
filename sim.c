@@ -1,22 +1,23 @@
 #include "game.h"
 #include "sim.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
+static SDL_Window* window = NULL;
+static SDL_Renderer* renderer = NULL;
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
-bool paused = false;
-int pos[SIM_X_SIZE * SIM_Y_SIZE * 2];
-int size = 0;
+static int paused = 1;
+static int pos[SIM_X_SIZE * SIM_Y_SIZE * 2];
+static int size = 0;
+
+static int stop_flag = 0;
 
 void simSetPixel(int x, int y, int argb) {
     const SDL_Rect fillRect = { x * 20, y * 20, 20, 20 };
@@ -41,7 +42,7 @@ void simFlush() {
     SDL_Delay(50);
 }
 
-void close(SDL_Thread* worker) {
+void closeThread(SDL_Thread* worker) {
     if (worker != NULL) {
         SDL_WaitThread(worker, NULL);
     }
@@ -51,21 +52,6 @@ void close(SDL_Thread* worker) {
 }
 
 extern int app(void* data);
-
-static int read_position(const char* file, int* position) {
-    FILE* f = fopen(file, "r");
-    if (!f) {
-        return 0;
-    }
-    int size = 0;
-    int x, y;
-    while (fscanf(f, "%d %d\n", &x, &y) != EOF) {
-        position[size++] = x;
-        position[size++] = y;
-    }
-    fclose(f);
-    return size;
-}
 
 static void simInit(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -78,7 +64,6 @@ static void simInit(int argc, char* argv[]) {
         exit(1);
     }
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
     if (renderer == NULL) {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         exit(1);
@@ -87,20 +72,16 @@ static void simInit(int argc, char* argv[]) {
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
-
-    if (argc > 1) {
-        size = read_position(argv[1], pos);
-    }
-
     new_game(pos, size, SIM_X_SIZE, SIM_Y_SIZE);
 
     srand(time(NULL));
 }
 
 static void simProcess() {
+    
     SDL_Event e;
 
-    bool mouse_flag = 0;
+    int mouse_flag = 0;
 
     while (1) {
         while (SDL_PollEvent(&e)) {
@@ -115,7 +96,7 @@ static void simProcess() {
                     SDL_RenderPresent(renderer);
                 }
             } else if ((e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEMOTION && mouse_flag) && paused) {
-                mouse_flag = true;
+                mouse_flag = 1;
                 int x, y;
                 const uint32_t res = SDL_GetMouseState(&x, &y);
                 x /= 20;
@@ -127,7 +108,7 @@ static void simProcess() {
                 }
                 SDL_RenderPresent(renderer);
             } else if (e.type == SDL_MOUSEBUTTONUP) {
-                mouse_flag = false;
+                mouse_flag = 0;
             }
         }
     }
@@ -135,10 +116,10 @@ static void simProcess() {
 
 int main(int argc, char* argv[]) {
     simInit(argc, argv);
-
+    
     SDL_Thread* worker = SDL_CreateThread(app, "LazyThread", NULL);
 
     simProcess();
-    close(worker);
+    closeThread(worker);
     return 0;
 }
