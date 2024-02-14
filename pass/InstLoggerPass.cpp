@@ -58,9 +58,6 @@ namespace {
                     builder.CreateCall(instLogFunc, args);
                 }
             }
-
-            // Dump Function
-
             return true;
         }
     };

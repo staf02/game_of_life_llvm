@@ -17,11 +17,6 @@ void new_game(const int* pos, const size_t pos_size, const int w, const int h) {
         }
     }
 
-    map[0][1] = 1;
-    map[0][0] = 1;
-    map[1][0] = 1;
-    map[1][1] = 1;
-
     for (size_t i = 0; i < pos_size; i += 2) {
         map[pos[i]][pos[i + 1]] = 1;
     }

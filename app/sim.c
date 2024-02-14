@@ -12,7 +12,7 @@ const int SCREEN_HEIGHT = 600;
 
 static SDL_Window* window = NULL;
 static SDL_Renderer* renderer = NULL;
-static int paused = 0;
+static int paused = 1;
 static int pos[SIM_X_SIZE * SIM_Y_SIZE * 2];
 static int size = 0;
 
