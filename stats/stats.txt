@@ -1,0 +1,15 @@
+alloca 0.650636%
+store 4.33228%
+load 13.2437%
+mul 0.185548%
+call 11.8068%
+br 41.9326%
+getelementptr 2.83031%
+bitcast 0.00514123%
+ret 0.092948%
+trunc 0.000947069%
+add 4.67164%
+icmp 15.1893%
+sext 3.3872%
+xor 7.73117e-05%
+srem 1.67086%
